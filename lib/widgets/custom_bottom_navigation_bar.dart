@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
 import 'package:noisie/screens/home_screen.dart';
+import 'package:noisie/screens/library_screen.dart';
 
 class CustomBottomNavigationBar extends StatefulWidget {
   const CustomBottomNavigationBar({super.key});
@@ -15,11 +16,7 @@ class _CustomBottomNavigationBarState extends State<CustomBottomNavigationBar> {
 
   final _screens = [
     const HomeScreen(),
-    const Scaffold(
-      body: Center(
-        child: Text('Explore'),
-      ),
-    ),
+    const LibraryScreen(),
     const Scaffold(
       body: Center(
         child: Text('Add'),
