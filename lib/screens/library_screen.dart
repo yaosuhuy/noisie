@@ -1,48 +1,155 @@
-import 'dart:io';
+import 'dart:typed_data';
+
+import 'package:device_info_plus/device_info_plus.dart';
 import 'package:flutter/material.dart';
-import 'package:noisie/screen_models/song_model.dart';
+import 'package:get/get.dart';
+import 'package:noisie/controller/player_controller.dart';
 import 'package:on_audio_query/on_audio_query.dart';
-import 'package:path_provider/path_provider.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class LibraryScreen extends StatefulWidget {
   const LibraryScreen({super.key});
 
   @override
-  State<LibraryScreen> createState() => _LibraryScreenState();
+  _LibraryScreenState createState() => _LibraryScreenState();
 }
 
-class _LibraryScreenState extends State<LibraryScreen> {
-  final _audioQuery = new OnAudioQuery();
+class _LibraryScreenState extends State<LibraryScreen>
+    with WidgetsBindingObserver {
+  final controller = Get.put(PlayerController());
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addObserver(this);
+  }
+
+  @override
+  void dispose() {
+    WidgetsBinding.instance.removeObserver(this);
+    super.dispose();
+  }
+
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    super.didChangeAppLifecycleState(state);
+    print("AppLifecycleState: $state");
+  }
+
+  // Yêu cầu quyền truy cập bộ nhớ
+  Future<PermissionStatus> requestPermission() async {
+    DeviceInfoPlugin plugin = DeviceInfoPlugin();
+    AndroidDeviceInfo android = await plugin.androidInfo;
+    final status = await Permission.storage.request();
+
+    print("Android SDK Version: ${android.version.sdkInt}");
+    print("Storage Permission Status: $status");
+
+    if (android.version.sdkInt < 33) {
+      if (status.isGranted) {
+        return PermissionStatus.granted;
+      } else if (status.isPermanentlyDenied) {
+        print(
+            "Storage permission is permanently denied. Opening app settings.");
+        await openAppSettings();
+      }
+    } else {
+      return PermissionStatus.granted; // Giả định quyền được cấp cho SDK >= 33
+    }
+    return status;
+  }
+
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<List<SongModel>>(
-      future: _audioQuery.querySongs(
-          orderType: OrderType.ASC_OR_SMALLER,
-          uriType: UriType.EXTERNAL,
-          ignoreCase: true),
-      builder: (context, item) {
-        if (item.data == null) {
-          return const Center(
-            child: CircularProgressIndicator(),
-          );
-        }
-        if (item.data!.isEmpty) {
-          return const Center(
-            child: Text('No song found!'),
-          );
-        }
-        return ListView.builder(
-          itemCount: item.data!.length,
-          itemBuilder: (context, index) {
-            return ListTile(
-              leading: Icon(Icons.music_note_outlined),
-              title: Text(item.data![index].displayNameWOExt),
-              subtitle: Text(
-                item.data![index].artist.toString(),
+    return FutureBuilder<PermissionStatus>(
+      future: requestPermission(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.waiting) {
+          return Center(child: CircularProgressIndicator());
+        } else if (snapshot.hasError) {
+          print("Error requesting permission: ${snapshot.error}");
+          return Center(
+              child: Text('Lỗi khi yêu cầu quyền: ${snapshot.error}'));
+        } else {
+          final permissionStatus = snapshot.data;
+          print("Final Permission Status: $permissionStatus");
+          if (permissionStatus == PermissionStatus.granted) {
+            return FutureBuilder<List<SongModel>>(
+              future: controller.audioQuery.querySongs(
+                ignoreCase: true,
+                orderType: OrderType.ASC_OR_SMALLER,
+                sortType: null,
+                uriType: UriType.EXTERNAL,
               ),
+              builder: (BuildContext context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return const Center(
+                    child: CircularProgressIndicator(),
+                  );
+                } else if (snapshot.hasError) {
+                  print("Error fetching songs: ${snapshot.error}");
+                  return Center(
+                      child:
+                          Text('Lỗi khi truy vấn bài hát: ${snapshot.error}'));
+                } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                  print("No songs found!");
+                  return const Center(
+                      child: Text("Không tìm thấy bài hát nào!"));
+                } else {
+                  return ListView.builder(
+                    itemCount: snapshot.data!.length,
+                    itemBuilder: (BuildContext context, index) {
+                      final song = snapshot.data![index];
+
+                      return FutureBuilder<Uint8List?>(
+                        future: controller.audioQuery
+                            .queryArtwork(song.id, ArtworkType.AUDIO),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return ListTile(
+                              leading: CircularProgressIndicator(),
+                              title: Text(song.title ?? ''),
+                              subtitle: Text(song.artist ?? ''),
+                            );
+                          } else if (snapshot.hasError) {
+                            return ListTile(
+                              leading: Icon(Icons.music_note_outlined),
+                              title: Text(song.title ?? ''),
+                              subtitle: Text(song.artist ?? ''),
+                            );
+                          } else if (snapshot.hasData &&
+                              snapshot.data != null) {
+                            return ListTile(
+                              leading: Image.memory(snapshot.data!),
+                              title: Text(song.title ?? ''),
+                              subtitle: Text(song.artist ?? ''),
+                            );
+                          } else {
+                            return ListTile(
+                              leading: Icon(Icons.music_note_outlined),
+                              title: Text(song.title),
+                              subtitle: Text(song.artist ?? 'Unknown Artist'),
+                            );
+                          }
+                        },
+                      );
+                    },
+                  );
+                }
+              },
             );
-          },
-        );
+          } else if (permissionStatus == PermissionStatus.denied) {
+            print("Storage permission denied");
+            return Center(child: Text("Quyền truy cập bộ nhớ bị từ chối"));
+          } else if (permissionStatus == PermissionStatus.permanentlyDenied) {
+            print("Storage permission permanently denied");
+            return Center(
+                child: Text(
+                    "Quyền truy cập bộ nhớ bị từ chối vĩnh viễn. Vui lòng bật trong cài đặt."));
+          }
+          return Center(child: Text('Trạng thái quyền: $permissionStatus'));
+        }
       },
     );
   }
