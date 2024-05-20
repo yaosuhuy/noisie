@@ -1,10 +1,11 @@
 import 'dart:typed_data';
-
 import 'package:device_info_plus/device_info_plus.dart';
+import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/widgets.dart';
 import 'package:get/get.dart';
 import 'package:noisie/controller/player_controller.dart';
+import 'package:noisie/screens/player_screen.dart';
 import 'package:on_audio_query/on_audio_query.dart';
 import 'package:permission_handler/permission_handler.dart';
 
@@ -162,67 +163,81 @@ class _LibraryScreenState extends State<LibraryScreen>
                                 snapshot.data != null) {
                               return Column(
                                 children: [
-                                  Row(
-                                    children: [
-                                      Image.memory(snapshot.data!,
-                                          width: 50,
-                                          height: 50,
-                                          fit: BoxFit.cover),
-                                      SizedBox(
-                                        width:
-                                            MediaQuery.of(context).size.width *
-                                                0.03,
-                                        height:
-                                            MediaQuery.of(context).size.height *
-                                                0.01,
-                                      ),
-                                      Column(
-                                        children: [
-                                          SizedBox(
-                                              width: (MediaQuery.of(context)
-                                                      .size
-                                                      .width) -
-                                                  50 -
-                                                  (MediaQuery.of(context)
-                                                          .size
-                                                          .width *
-                                                      0.03),
-                                              child: Column(
-                                                  crossAxisAlignment:
-                                                      CrossAxisAlignment.start,
-                                                  children: [
-                                                    Text(
-                                                      song.title,
-                                                      style: const TextStyle(
-                                                        fontFamily: "Spotify",
-                                                        fontSize: 15,
-                                                        fontWeight:
-                                                            FontWeight.w600,
+                                  GestureDetector(
+                                    onTap: () {
+                                      Get.to(() => PlayerScreen(), arguments: {
+                                        'artwork': snapshot.data!,
+                                        'title': song.title,
+                                        'artist': song.artist,
+                                        'uri': song.uri
+                                      });
+                                      controller.playSong(song.uri);
+                                    },
+                                    child: Row(
+                                      children: [
+                                        Image.memory(snapshot.data!,
+                                            width: 50,
+                                            height: 50,
+                                            fit: BoxFit.cover),
+                                        SizedBox(
+                                          width: MediaQuery.of(context)
+                                                  .size
+                                                  .width *
+                                              0.03,
+                                          height: MediaQuery.of(context)
+                                                  .size
+                                                  .height *
+                                              0.01,
+                                        ),
+                                        Column(
+                                          children: [
+                                            SizedBox(
+                                                width: (MediaQuery.of(context)
+                                                        .size
+                                                        .width) -
+                                                    50 -
+                                                    (MediaQuery.of(context)
+                                                            .size
+                                                            .width *
+                                                        0.03),
+                                                child: Column(
+                                                    crossAxisAlignment:
+                                                        CrossAxisAlignment
+                                                            .start,
+                                                    children: [
+                                                      Text(
+                                                        song.title,
+                                                        style: const TextStyle(
+                                                          fontFamily: "Spotify",
+                                                          fontSize: 15,
+                                                          fontWeight:
+                                                              FontWeight.w600,
+                                                        ),
+                                                        overflow: TextOverflow
+                                                            .ellipsis,
+                                                        maxLines: 1,
+                                                        textAlign:
+                                                            TextAlign.start,
                                                       ),
-                                                      overflow:
-                                                          TextOverflow.ellipsis,
-                                                      maxLines: 1,
-                                                      textAlign:
-                                                          TextAlign.start,
-                                                    ),
-                                                    Text(
-                                                      song.artist ?? '',
-                                                      style: const TextStyle(
-                                                        fontFamily: "Spotify",
-                                                        fontSize: 13,
-                                                        fontWeight:
-                                                            FontWeight.w400,
+                                                      Text(
+                                                        song.artist ?? '',
+                                                        style: const TextStyle(
+                                                          fontFamily: "Spotify",
+                                                          fontSize: 13,
+                                                          fontWeight:
+                                                              FontWeight.w400,
+                                                        ),
+                                                        overflow: TextOverflow
+                                                            .ellipsis,
+                                                        maxLines: 1,
+                                                        textAlign:
+                                                            TextAlign.start,
                                                       ),
-                                                      overflow:
-                                                          TextOverflow.ellipsis,
-                                                      maxLines: 1,
-                                                      textAlign:
-                                                          TextAlign.start,
-                                                    ),
-                                                  ]))
-                                        ],
-                                      ),
-                                    ],
+                                                    ]))
+                                          ],
+                                        ),
+                                      ],
+                                    ),
                                   ),
                                   SizedBox(
                                     width: MediaQuery.of(context).size.width,
@@ -234,63 +249,79 @@ class _LibraryScreenState extends State<LibraryScreen>
                             } else {
                               return Column(
                                 children: [
-                                  Row(
-                                    children: [
-                                      Image.asset('assets/images/noise.jpg',
-                                          width: 50, height: 50),
-                                      SizedBox(
-                                        width:
-                                            MediaQuery.of(context).size.width *
-                                                0.03,
-                                        height:
-                                            MediaQuery.of(context).size.height *
-                                                0.01,
-                                      ),
-                                      Column(
-                                        children: [
-                                          SizedBox(
-                                            width: (MediaQuery.of(context)
-                                                    .size
-                                                    .width) -
-                                                50 -
-                                                (MediaQuery.of(context)
-                                                        .size
-                                                        .width *
-                                                    0.03),
-                                            child: Column(
-                                              crossAxisAlignment:
-                                                  CrossAxisAlignment.start,
-                                              children: [
-                                                Text(
-                                                  song.title,
-                                                  style: const TextStyle(
-                                                    fontFamily: "Spotify",
-                                                    fontSize: 15,
-                                                    fontWeight: FontWeight.w600,
+                                  GestureDetector(
+                                    onTap: () {
+                                      Get.to(() => PlayerScreen(), arguments: {
+                                        'artwork': 'assets/images/noise.jpg',
+                                        'title': song.title,
+                                        'artist': 'Unknown Artist',
+                                        'uri': song.uri
+                                      });
+
+                                      controller.playSong(song.uri);
+                                    },
+                                    child: Row(
+                                      children: [
+                                        Image.asset('assets/images/noise.jpg',
+                                            width: 50, height: 50),
+                                        SizedBox(
+                                          width: MediaQuery.of(context)
+                                                  .size
+                                                  .width *
+                                              0.03,
+                                          height: MediaQuery.of(context)
+                                                  .size
+                                                  .height *
+                                              0.01,
+                                        ),
+                                        Column(
+                                          children: [
+                                            SizedBox(
+                                              width: (MediaQuery.of(context)
+                                                      .size
+                                                      .width) -
+                                                  50 -
+                                                  (MediaQuery.of(context)
+                                                          .size
+                                                          .width *
+                                                      0.03),
+                                              child: Column(
+                                                crossAxisAlignment:
+                                                    CrossAxisAlignment.start,
+                                                children: [
+                                                  Text(
+                                                    song.title,
+                                                    style: const TextStyle(
+                                                      fontFamily: "Spotify",
+                                                      fontSize: 15,
+                                                      fontWeight:
+                                                          FontWeight.w600,
+                                                    ),
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                    maxLines: 1,
+                                                    textAlign: TextAlign.start,
                                                   ),
-                                                  overflow:
-                                                      TextOverflow.ellipsis,
-                                                  maxLines: 1,
-                                                  textAlign: TextAlign.start,
-                                                ),
-                                                const Text(
-                                                  'Unknown Artist',
-                                                  style: const TextStyle(
-                                                    fontFamily: "Spotify",
-                                                    fontSize: 13,
-                                                    fontWeight: FontWeight.w400,
+                                                  const Text(
+                                                    'Unknown Artist',
+                                                    style: TextStyle(
+                                                      fontFamily: "Spotify",
+                                                      fontSize: 13,
+                                                      fontWeight:
+                                                          FontWeight.w400,
+                                                    ),
+                                                    overflow:
+                                                        TextOverflow.ellipsis,
+                                                    maxLines: 1,
+                                                    textAlign: TextAlign.start,
                                                   ),
-                                                  overflow:
-                                                      TextOverflow.ellipsis,
-                                                  maxLines: 1,
-                                                  textAlign: TextAlign.start,
-                                                ),
-                                              ],
-                                            ),
-                                          )
-                                        ],
-                                      )
-                                    ],
+                                                ],
+                                              ),
+                                            )
+                                          ],
+                                        )
+                                      ],
+                                    ),
                                   ),
                                   SizedBox(
                                     width: MediaQuery.of(context).size.width,

@@ -1,9 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter/scheduler.dart';
 import 'package:flutter/services.dart';
 import 'package:get/get.dart';
-import 'package:noisie/screens/home_screen.dart';
-import 'package:noisie/screens/nav_screen.dart';
 import 'package:noisie/screens/splash_screen.dart';
 
 void main() {
@@ -28,6 +25,7 @@ class MyApp extends StatelessWidget {
           // bottomNavigationBarTheme:
         ),
         home: const SplashScreen(),
+        // home: const PlayerScreen(),
       ),
     );
   }
