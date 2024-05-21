@@ -7,11 +7,32 @@ class PlayerController extends GetxController {
   final audioQuery = OnAudioQuery();
   final audioPlayer = AudioPlayer();
   var isPlaying = false.obs;
-  var currentPosition = Duration.zero.obs;
+  var currentPosition = ''.obs;
+  var totalDuration = ''.obs;
+
+  var max = 0.0.obs;
+  var value = 0.0.obs;
+
   @override
   void onInit() {
     super.onInit();
     checkPermission();
+  }
+
+  updatePosition() {
+    audioPlayer.positionStream.listen((p) {
+      currentPosition.value = p.toString();
+      value.value = p.inSeconds.toDouble();
+    });
+    audioPlayer.durationStream.listen((d) {
+      totalDuration.value = d.toString();
+      max.value = d!.inSeconds.toDouble();
+    });
+  }
+
+  changeDurationToSecond(seconds) {
+    var duration = Duration(seconds: seconds);
+    audioPlayer.seek(duration);
   }
 
   playSong(String? uri) {
@@ -21,9 +42,7 @@ class PlayerController extends GetxController {
       );
       audioPlayer.play();
       isPlaying.value = true;
-      audioPlayer.positionStream.listen((position) {
-        currentPosition.value = position;
-      });
+      updatePosition();
     } on Exception catch (e) {
       print(e.toString());
     }
@@ -39,9 +58,12 @@ class PlayerController extends GetxController {
   }
 
   resumeSong() {
-    audioPlayer.seek(currentPosition.value);
-    audioPlayer.play();
-    isPlaying.value = true;
+    final currentPositionDuration = audioPlayer.position;
+    if (currentPositionDuration != null) {
+      audioPlayer.seek(currentPositionDuration);
+      audioPlayer.play();
+      isPlaying.value = true;
+    }
   }
 
   checkPermission() async {

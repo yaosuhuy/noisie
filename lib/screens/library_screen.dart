@@ -255,9 +255,9 @@ class _LibraryScreenState extends State<LibraryScreen>
                                         'artwork': 'assets/images/noise.jpg',
                                         'title': song.title,
                                         'artist': 'Unknown Artist',
-                                        'uri': song.uri
+                                        'uri': song.uri,
+                                        'duration': controller.totalDuration
                                       });
-
                                       controller.playSong(song.uri);
                                     },
                                     child: Row(
